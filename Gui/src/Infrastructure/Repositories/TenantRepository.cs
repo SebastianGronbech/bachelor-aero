@@ -12,9 +12,11 @@ public class TenantRepository : ITenantRepository
     {
         _context = context;
     }
-    public Task<List<Tenant>> GetAllAsync(CancellationToken cancellationToken)
+    public async Task<List<Tenant>> GetAllAsync(CancellationToken cancellationToken)
     {
-        return _context.Tenants.ToListAsync(cancellationToken);
+        return await _context.Tenants
+            .Include(t => t.Users)
+            .ToListAsync(cancellationToken);
     }
 
     public async Task<Tenant?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)

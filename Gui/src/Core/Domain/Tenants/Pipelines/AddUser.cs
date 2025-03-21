@@ -12,13 +12,11 @@ public class AddUser
     public class Handler : IRequestHandler<Request, Response>
     {
         private readonly ITenantRepository _tenantRepository;
-        private readonly IUserRepository _userRepository;
         private readonly IUnitOfWork _unitOfWork;
 
-        public Handler(ITenantRepository tenantRepository, IUserRepository userRepository, IUnitOfWork unitOfWork)
+        public Handler(ITenantRepository tenantRepository, IUnitOfWork unitOfWork)
         {
             _tenantRepository = tenantRepository ?? throw new ArgumentNullException(nameof(tenantRepository));
-            _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
             _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
         }
 
@@ -38,8 +36,6 @@ public class AddUser
             {
                 return new Response(Success: false, [ex.Message]);
             }
-
-            _userRepository.Add(tenant.Users.First(u => u.Id == request.UserId));
 
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 

@@ -20,6 +20,8 @@ public class ApplicationContext : IdentityDbContext<IdentityUser<Guid>, Identity
     public DbSet<User> Userss { get; set; } = null!;
     public DbSet<UserRoleAssignment> UserRoleAssignments { get; set; } = null!;
     public DbSet<Unit> Units { get; set; } = null!;
+    public DbSet<Operator> Operators { get; set; } = null!;
+    public DbSet<Observer> Observers { get; set; } = null!;
 
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -29,6 +31,16 @@ public class ApplicationContext : IdentityDbContext<IdentityUser<Guid>, Identity
         modelBuilder.Entity<UserRoleAssignment>(entity =>
         {
             entity.HasKey(ura => ura.Id);
+        });
+
+        modelBuilder.Entity<Operator>(entity =>
+        {
+            entity.HasKey(o => new { o.UserId, o.UnitId });
+        });
+
+        modelBuilder.Entity<Observer>(entity =>
+        {
+            entity.HasKey(o => new { o.UserId, o.UnitId });
         });
     }
 

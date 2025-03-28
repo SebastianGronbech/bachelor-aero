@@ -1,8 +1,7 @@
 using Gui.Core.Domain.Users;
-using Gui.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
-namespace Gui.Infrastructure.Repositories;
+namespace Gui.Infrastructure.Persistence.Repositories;
 
 public class UserRepository : IUserRepository
 {

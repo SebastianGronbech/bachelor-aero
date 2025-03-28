@@ -5,22 +5,6 @@ using Microsoft.EntityFrameworkCore.Diagnostics;
 
 namespace Gui.Infrastructure.Persistence.Interceptors;
 
-// public class PublishDomainEventsInterceptor : IInterceptor
-// {
-//     private readonly IDomainEventDispatcher _domainEventDispatcher;
-
-//     public PublishDomainEventsInterceptor(IDomainEventDispatcher domainEventDispatcher)
-//     {
-//         _domainEventDispatcher = domainEventDispatcher;
-//     }
-
-//     public void Intercept(IInvocation invocation)
-//     {
-//         invocation.Proceed();
-//         _domainEventDispatcher.DispatchDomainEventsAsync(invocation.ReturnValue as BaseEntity);
-//     }
-// }
-
 public class PublishDomainEventsInterceptor : SaveChangesInterceptor
 {
     private readonly IPublisher _mediator;
@@ -36,7 +20,10 @@ public class PublishDomainEventsInterceptor : SaveChangesInterceptor
         return base.SavingChanges(eventData, result);
     }
 
-    public async override ValueTask<InterceptionResult<int>> SavingChangesAsync(DbContextEventData eventData, InterceptionResult<int> result, CancellationToken cancellationToken = new CancellationToken())
+    public async override ValueTask<InterceptionResult<int>> SavingChangesAsync(
+        DbContextEventData eventData,
+        InterceptionResult<int> result,
+        CancellationToken cancellationToken = default)
     {
         await PublishDomainEvents(eventData.Context);
         return await base.SavingChangesAsync(eventData, result, cancellationToken);

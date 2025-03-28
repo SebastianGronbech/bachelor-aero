@@ -2,20 +2,23 @@ using Gui.Core.SharedKernel;
 
 namespace Gui.Core.Domain.Units;
 
-public class Unit : BaseEntity
+public sealed class Unit : BaseEntity
 {
-    public Guid Id { get; protected set; }
+    public Guid Id { get; private init; }
     public string Name { get; private set; }
 
-    private readonly HashSet<Guid> _operatorIds = new();
-    public IReadOnlyCollection<Guid> OperatorIds => _operatorIds;
+    private readonly HashSet<Operator> _operators = new();
+    public IReadOnlyCollection<Operator> Operators => _operators;
 
-    private readonly HashSet<Guid> _observerIds = new();
-    public IReadOnlyCollection<Guid> ObserverIds => _observerIds;
+    private readonly HashSet<Observer> _observers = new();
+    public IReadOnlyCollection<Observer> Observers => _observers;
+
+    private readonly HashSet<TelemetryStream> _telemetryStreams = new();
+    public IReadOnlyCollection<TelemetryStream> TelemetryStreams => _telemetryStreams;
 
     public DateTimeOffset CreatedAt { get; }
     public DateTimeOffset? UpdatedAt { get; private set; }
-    public DateTimeOffset? DeletedAt { get; protected set; }
+    public DateTimeOffset? DeletedAt { get; private set; }
 
     private Unit(Guid id, string name)
     {
@@ -50,35 +53,67 @@ public class Unit : BaseEntity
         UpdatedAt = DateTimeOffset.UtcNow;
     }
 
-    public void AddOperator(Guid operatorId)
+    public Operator AddOperator(Guid userId)
     {
-        if (!_operatorIds.Contains(operatorId))
+        if (_operators.Any(o => o.UserId == userId))
         {
-            _operatorIds.Add(operatorId);
+            throw new InvalidOperationException("User is already an operator");
         }
+
+        var @operator = new Operator(Id, userId);
+        _operators.Add(@operator);
+
+        UpdatedAt = DateTimeOffset.UtcNow;
+
+        return @operator;
     }
 
-    public void RemoveOperator(Guid operatorId)
+    public void RemoveOperator(Guid userId)
     {
-        if (_operatorIds.Contains(operatorId))
+        var operatorToRemove = _operators.FirstOrDefault(o => o.UserId == userId);
+        if (operatorToRemove == null)
         {
-            _operatorIds.Remove(operatorId);
+            throw new InvalidOperationException("User is not an operator");
         }
+
+        _operators.Remove(operatorToRemove);
     }
 
-    public void AddObserver(Guid observerId)
+    public Observer AddObserver(Guid userId)
     {
-        if (!_observerIds.Contains(observerId))
+        if (_observers.Any(o => o.UserId == userId))
         {
-            _observerIds.Add(observerId);
+            throw new InvalidOperationException("User is already an observer");
         }
+
+        var observer = new Observer(Id, userId);
+        _observers.Add(observer);
+
+        UpdatedAt = DateTimeOffset.UtcNow;
+
+        return observer;
     }
 
-    public void RemoveObserver(Guid observerId)
+    // public void RemoveObserver(Guid observerId)
+    // {
+    //     if (_observers.Contains(observerId))
+    //     {
+    //         _observers.Remove(observerId);
+    //     }
+    // }
+
+    public TelemetryStream AddTelemetryStream(Guid id, string name, string description)
     {
-        if (_observerIds.Contains(observerId))
+        if (_telemetryStreams.Any(ts => ts.Id == id))
         {
-            _observerIds.Remove(observerId);
+            throw new InvalidOperationException("Telemetry stream with this ID already exists");
         }
+
+        var telemetryStream = TelemetryStream.Create(id, Id, name, description);
+        _telemetryStreams.Add(telemetryStream);
+
+        UpdatedAt = DateTimeOffset.UtcNow;
+
+        return telemetryStream;
     }
 }

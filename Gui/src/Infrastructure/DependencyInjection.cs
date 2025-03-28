@@ -1,9 +1,10 @@
+using Gui.Core.Domain.Units;
 using Gui.Core.Domain.Users;
 using Gui.Core.SharedKernel;
 using Gui.Infrastructure.Identity;
 using Gui.Infrastructure.Persistence;
 using Gui.Infrastructure.Persistence.Interceptors;
-using Gui.Infrastructure.Repositories;
+using Gui.Infrastructure.Persistence.Repositories;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -33,8 +34,13 @@ public static class DependencyInjection
         services.AddDbContext<ApplicationContext>(options =>
             options.UseMySql(
                 connectionString,
-                ServerVersion.AutoDetect(connectionString)
+                ServerVersion.AutoDetect(connectionString),
                 // b => b.MigrationsAssembly(typeof(GuiDbContext).Assembly.FullName))
+                mySqlAction =>
+                {
+                    mySqlAction.EnableRetryOnFailure(3);
+                    mySqlAction.CommandTimeout(60);
+                }
                 )
                 .EnableSensitiveDataLogging()
                 .EnableDetailedErrors());
@@ -46,6 +52,8 @@ public static class DependencyInjection
 
         services.AddScoped<PublishDomainEventsInterceptor>();
         services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<IUnitRepository, UnitRepository>();
+        services.AddScoped<IOperatorRepository, OperatorRepository>();
         services.AddScoped<IUnitOfWork>(provider => provider.GetRequiredService<ApplicationContext>());
 
         return services;
